@@ -101,24 +101,39 @@ export class StudioRenderer {
     const headY = height * 0.52 + (tracking.faceY - 0.45) * height * 0.25;
     const headRadius = Math.min(width, height) * 0.15;
 
-    // 2. Presenter Torso & Face Base
-    this.renderPresenterBase(ctx, headX, headY, headRadius, tracking, studioSettings);
+    // 2. Character & Face Layer
+    if (studioSettings.mode === 'avatar') {
+      // Full Avatar Mode: Render stylized character portrait with facial expressions
+      this.renderPresenterBase(ctx, headX, headY, headRadius, tracking, studioSettings);
+    } else {
+      // Live Face Swap Mode: Render presenter crewneck body ONLY (NO avatar face behind user)
+      if (studioSettings.showOutfit) {
+        ctx.save();
+        ctx.translate(headX, headY);
+        ctx.rotate(tracking.roll * 0.35 + tracking.yaw * 0.08);
+        this.renderProceduralOutfit(ctx, headRadius);
+        ctx.restore();
+      }
 
-    // 3. Live Camera Face Swap (if selected)
-    if (studioSettings.mode === 'face_swap') {
+      // Render live camera feed seamlessly onto neck collar
       this.renderCameraFaceSwap(ctx, videoElement, headX, headY, headRadius, tracking);
+
+      // Glasses overlay for face swap mode if enabled
+      if (studioSettings.showGlasses) {
+        this.renderDesignerGlasses(ctx, headX, headY, headRadius, tracking);
+      }
     }
 
-    // 4. Dynamic Hair System
+    // 3. Dynamic Signature Hair System (Height, Bigness, Shininess & Physics)
     const hairAnchorY = headY - headRadius * 0.92;
     this.hairEngine.render(ctx, headX, hairAnchorY, headRadius, tracking, hairSettings);
 
-    // 5. Desk & Laptop & Mug
+    // 4. Desk & DeepBrain Laptop & Mug Props
     if (studioSettings.showLaptopProps || studioSettings.showMugProps) {
       this.renderForegroundProps(ctx, width, height, studioSettings);
     }
 
-    // 6. Post Lighting & LUT Filters
+    // 5. Post Lighting & LUT Filters
     this.applyStudioLightingAndLut(ctx, width, height, studioSettings);
 
     ctx.restore();
@@ -237,36 +252,88 @@ export class StudioRenderer {
     ctx.translate(headX, headY);
     ctx.rotate(tracking.roll * 0.85 + tracking.yaw * 0.12);
 
-    const fw = r * 1.5;
-    const fh = r * 1.8;
+    const fw = r * 2.2;
+    const fh = r * 2.6;
     const yawX = tracking.yaw * 16;
-    const pitchY = tracking.pitch * 12;
+    const pitchY = tracking.pitch * 12 - r * 0.15;
 
+    // Smooth feathered oval clipping path for face swap
     ctx.beginPath();
-    ctx.ellipse(yawX, pitchY, fw * 0.52, fh * 0.58, 0, 0, Math.PI * 2);
+    ctx.ellipse(yawX, pitchY, fw * 0.54, fh * 0.58, 0, 0, Math.PI * 2);
     ctx.clip();
 
     const vw = videoElement.videoWidth || 640;
     const vh = videoElement.videoHeight || 480;
-    const cropSize = Math.min(vw, vh) * 0.65;
+    const cropSize = Math.min(vw, vh) * 0.78;
     const sx = (vw - cropSize) * 0.5;
-    const sy = (vh - cropSize) * 0.35;
+    const sy = (vh - cropSize) * 0.28;
 
+    // Draw user webcam centered inside face aperture
     ctx.drawImage(
       videoElement,
       sx, sy, cropSize, cropSize,
-      -fw * 0.6 + yawX, -fh * 0.6 + pitchY, fw * 1.2, fh * 1.2
+      -fw * 0.58 + yawX, -fh * 0.54 + pitchY, fw * 1.16, fh * 1.16
     );
+
+    ctx.restore();
+  }
+
+  private renderDesignerGlasses(
+    ctx: CanvasRenderingContext2D,
+    headX: number,
+    headY: number,
+    r: number,
+    tracking: FaceTrackingData
+  ) {
+    ctx.save();
+    ctx.translate(headX, headY);
+    ctx.rotate(tracking.roll * 0.85 + tracking.yaw * 0.12);
+
+    const yawX = tracking.yaw * 18;
+    const pitchY = tracking.pitch * 14 - r * 0.08;
+    const eyeDist = r * 0.42;
+    const lensR = r * 0.24;
+
+    ctx.strokeStyle = '#1e1b18';
+    ctx.lineWidth = 4.5;
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+
+    // Left Frame
+    ctx.beginPath();
+    ctx.arc(yawX - eyeDist, pitchY, lensR, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+
+    // Right Frame
+    ctx.beginPath();
+    ctx.arc(yawX + eyeDist, pitchY, lensR, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+
+    // Nose Bridge
+    ctx.beginPath();
+    ctx.arc(yawX, pitchY - lensR * 0.25, eyeDist * 0.5, Math.PI * 1.15, Math.PI * 1.85);
+    ctx.stroke();
+
+    // Temple arms
+    ctx.beginPath();
+    ctx.moveTo(yawX - eyeDist - lensR, pitchY);
+    ctx.lineTo(yawX - eyeDist - lensR * 1.6, pitchY - 4);
+    ctx.moveTo(yawX + eyeDist + lensR, pitchY);
+    ctx.lineTo(yawX + eyeDist + lensR * 1.6, pitchY - 4);
+    ctx.stroke();
+
     ctx.restore();
   }
 
   private renderProceduralOutfit(ctx: CanvasRenderingContext2D, r: number) {
-    const neckWidth = r * 0.88;
-    const neckY = r * 0.84;
-    const shoulderWidth = r * 4.2;
+    const neckWidth = r * 1.05;
+    const neckY = r * 0.72;
+    const shoulderWidth = r * 4.6;
     const shoulderY = r * 1.35;
-    const bodyBottom = r * 4.8;
+    const bodyBottom = r * 5.2;
 
+    // Neck Base
     ctx.beginPath();
     ctx.moveTo(-neckWidth * 0.5, neckY);
     ctx.lineTo(neckWidth * 0.5, neckY);
@@ -276,22 +343,31 @@ export class StudioRenderer {
     ctx.fillStyle = '#b45309';
     ctx.fill();
 
+    // Oversized Presenter Black Crewneck Tee
     ctx.beginPath();
-    ctx.moveTo(-neckWidth * 0.52, neckY + 12);
-    ctx.bezierCurveTo(-shoulderWidth * 0.35, shoulderY - 8, -shoulderWidth * 0.72, shoulderY + 25, -shoulderWidth * 0.95, shoulderY + 80);
-    ctx.lineTo(-shoulderWidth * 0.92, bodyBottom);
-    ctx.lineTo(shoulderWidth * 0.92, bodyBottom);
-    ctx.lineTo(shoulderWidth * 0.95, shoulderY + 80);
-    ctx.bezierCurveTo(shoulderWidth * 0.72, shoulderY + 25, shoulderWidth * 0.35, shoulderY - 8, neckWidth * 0.52, neckY + 12);
-    ctx.bezierCurveTo(neckWidth * 0.3, neckY + 38, -neckWidth * 0.3, neckY + 38, -neckWidth * 0.52, neckY + 12);
+    ctx.moveTo(-neckWidth * 0.55, neckY + 14);
+    ctx.bezierCurveTo(-shoulderWidth * 0.35, shoulderY - 8, -shoulderWidth * 0.75, shoulderY + 28, -shoulderWidth * 0.98, shoulderY + 85);
+    ctx.lineTo(-shoulderWidth * 0.95, bodyBottom);
+    ctx.lineTo(shoulderWidth * 0.95, bodyBottom);
+    ctx.lineTo(shoulderWidth * 0.98, shoulderY + 85);
+    ctx.bezierCurveTo(shoulderWidth * 0.75, shoulderY + 28, shoulderWidth * 0.35, shoulderY - 8, neckWidth * 0.55, neckY + 14);
+    ctx.bezierCurveTo(neckWidth * 0.3, neckY + 42, -neckWidth * 0.3, neckY + 42, -neckWidth * 0.55, neckY + 14);
     ctx.closePath();
 
     const teeGrad = ctx.createLinearGradient(0, neckY, 0, bodyBottom);
     teeGrad.addColorStop(0, '#1c1917');
-    teeGrad.addColorStop(0.2, '#0f0f11');
+    teeGrad.addColorStop(0.15, '#141416');
+    teeGrad.addColorStop(0.6, '#0c0c0e');
     teeGrad.addColorStop(1, '#050505');
     ctx.fillStyle = teeGrad;
     ctx.fill();
+
+    // Collar Ribbing
+    ctx.beginPath();
+    ctx.ellipse(0, neckY + 26, neckWidth * 0.52, 14, 0, 0, Math.PI);
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+    ctx.lineWidth = 3;
+    ctx.stroke();
   }
 
   private renderProceduralFace(ctx: CanvasRenderingContext2D, r: number, tracking: FaceTrackingData) {
@@ -350,10 +426,12 @@ export class StudioRenderer {
     ctx.lineTo(w, deskY);
     ctx.stroke();
 
+    // DeepBrain Laptop centered in foreground
     if (studio.showLaptopProps) {
-      this.renderDeepMindLaptop(ctx, w * 0.5, deskY + 28, w * 0.35, h * 0.27);
+      this.renderDeepBrainLaptop(ctx, w * 0.5, deskY + 28, w * 0.35, h * 0.27);
     }
 
+    // Yellow Mug placed on the right
     if (studio.showMugProps) {
       this.renderYellowMug(ctx, w * 0.78, deskY + 10, w * 0.080, h * 0.17);
     }
@@ -361,7 +439,7 @@ export class StudioRenderer {
     ctx.restore();
   }
 
-  private renderDeepMindLaptop(
+  private renderDeepBrainLaptop(
     ctx: CanvasRenderingContext2D,
     cx: number,
     baseY: number,
@@ -386,12 +464,14 @@ export class StudioRenderer {
     ctx.lineWidth = 1.5;
     ctx.stroke();
 
+    // Fictitious Brand Wordmark: "DeepBrain AI"
     ctx.save();
     ctx.font = '600 12px var(--font-heading), sans-serif';
     ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
-    ctx.fillText('Google DeepMind', cx - topW * 0.5 + 16, topY + 22);
+    ctx.fillText('DeepBrain AI', cx - topW * 0.5 + 16, topY + 22);
     ctx.restore();
 
+    // Fictitious I/Ø Rainbow Badge
     this.renderIoBadge(ctx, cx, topY + lapH * 0.44, lapW * 0.11);
 
     ctx.beginPath();
@@ -429,18 +509,26 @@ export class StudioRenderer {
     ctx.strokeStyle = logoGrad;
     ctx.lineCap = 'round';
 
+    // Stylized "I"
     ctx.beginPath();
-    ctx.moveTo(cx - r * 0.35, cy - r * 0.45);
-    ctx.lineTo(cx - r * 0.35, cy + r * 0.45);
+    ctx.moveTo(cx - r * 0.38, cy - r * 0.48);
+    ctx.lineTo(cx - r * 0.38, cy + r * 0.48);
+    ctx.stroke();
+
+    // Stylized slash "/"
+    ctx.beginPath();
+    ctx.moveTo(cx - r * 0.08, cy + r * 0.48);
+    ctx.lineTo(cx + r * 0.08, cy - r * 0.48);
+    ctx.stroke();
+
+    // Stylized "Ø" (circle with diagonal slash)
+    ctx.beginPath();
+    ctx.arc(cx + r * 0.46, cy, r * 0.38, 0, Math.PI * 2);
     ctx.stroke();
 
     ctx.beginPath();
-    ctx.moveTo(cx - r * 0.05, cy + r * 0.45);
-    ctx.lineTo(cx + r * 0.1, cy - r * 0.45);
-    ctx.stroke();
-
-    ctx.beginPath();
-    ctx.arc(cx + r * 0.42, cy, r * 0.38, 0, Math.PI * 2);
+    ctx.moveTo(cx + r * 0.24, cy + r * 0.32);
+    ctx.lineTo(cx + r * 0.68, cy - r * 0.32);
     ctx.stroke();
 
     ctx.restore();

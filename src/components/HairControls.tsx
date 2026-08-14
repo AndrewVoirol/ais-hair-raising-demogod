@@ -25,13 +25,13 @@ export const HairControls: React.FC<HairControlsProps> = ({
     { id: 'jet_black', name: 'Jet Obsidian', color: '#09090b', highlight: '#ffffff' },
     { id: 'espresso', name: 'Warm Espresso', color: '#27170e', highlight: '#fed7aa' },
     { id: 'golden', name: 'Golden Streak', color: '#451a03', highlight: '#fbbf24' },
-    { id: 'cyber_blue', name: 'Cyber I/O Blue', color: '#0f172a', highlight: '#38bdf8' },
+    { id: 'cyber_blue', name: 'Cyber I/Ø Blue', color: '#0f172a', highlight: '#38bdf8' },
     { id: 'neon_pink', name: 'Electric Magenta', color: '#4a044e', highlight: '#f43f5e' },
     { id: 'super_gold', name: 'Demogod Gold', color: '#78350f', highlight: '#fde047' },
   ];
 
   const hairPresets = [
-    { id: 'keynote', name: 'I/O Keynote', desc: 'Natural voluminous sweep', height: 1.0, bigness: 1.0, shine: 65 },
+    { id: 'keynote', name: 'I/Ø Keynote', desc: 'Natural voluminous sweep', height: 1.0, bigness: 1.0, shine: 65 },
     { id: 'mega_pompadour', name: 'Mega Pompadour', desc: 'Extra tall & textured', height: 1.8, bigness: 1.35, shine: 80 },
     { id: 'sky_high', name: 'Sky-High Demogod', desc: 'Maximum gravity-defying height', height: 2.8, bigness: 1.7, shine: 95 },
     { id: 'sleek', name: 'Sleek Minimal', desc: 'Clean executive crop', height: 0.65, bigness: 0.85, shine: 40 },

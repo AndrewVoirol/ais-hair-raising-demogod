@@ -22,7 +22,7 @@ export const EnvironmentControls: React.FC<EnvironmentControlsProps> = ({
 }) => {
   const lutFilters: { id: LutFilterType; name: string; desc: string; badge: string }[] = [
     { id: 'warm_loft', name: 'Brooklyn Warm', desc: 'Warm exposed brick tones', badge: 'Cozy' },
-    { id: 'io_keynote', name: 'Google I/O Keynote', desc: 'Sleek keynote blue/magenta tint', badge: 'Tech' },
+    { id: 'io_keynote', name: 'I/Ø Keynote', desc: 'Sleek keynote blue/magenta tint', badge: 'Tech' },
     { id: 'crisp_tech', name: 'Studio Crisp', desc: 'High-clarity neutral studio light', badge: 'Clean' },
     { id: 'cinematic_teal', name: 'Cinematic Teal', desc: 'Modern 35mm cinema grade', badge: 'Cinema' },
     { id: 'noir', name: 'Studio Noir', desc: 'Moody high-contrast monochrome', badge: 'Moody' },
@@ -37,7 +37,7 @@ export const EnvironmentControls: React.FC<EnvironmentControlsProps> = ({
           Desk Props & Presenter Fit
         </label>
         <div className="grid grid-cols-2 gap-2.5">
-          {/* DeepMind Laptop */}
+          {/* DeepBrain Laptop */}
           <button
             onClick={() =>
               setStudioSettings((prev) => ({
@@ -55,10 +55,10 @@ export const EnvironmentControls: React.FC<EnvironmentControlsProps> = ({
               <Laptop className="w-4 h-4 text-sky-400" />
               <div>
                 <div className="text-xs font-bold text-neutral-200">
-                  DeepMind Laptop
+                  DeepBrain Laptop
                 </div>
                 <div className="text-[10px] text-neutral-400">
-                  Rainbow I/O sticker
+                  Rainbow I/Ø badge
                 </div>
               </div>
             </div>

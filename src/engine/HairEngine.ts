@@ -7,6 +7,7 @@ interface SpringState {
   vy: number;
   rot: number;
   vRot: number;
+  wobble: number;
 }
 
 interface Sparkle {
@@ -19,13 +20,20 @@ interface Sparkle {
 }
 
 export class HairEngine {
-  private spring: SpringState = { x: 0, y: 0, vx: 0, vy: 0, rot: 0, vRot: 0 };
+  private spring: SpringState = { x: 0, y: 0, vx: 0, vy: 0, rot: 0, vRot: 0, wobble: 0 };
   private sparkles: Sparkle[] = [];
   private hairImg: HTMLImageElement | null = null;
   private hairCanvas: HTMLCanvasElement | null = null;
   private hairCtx: CanvasRenderingContext2D | null = null;
   private isHairLoaded = false;
   private time = 0;
+
+  // Previous tracking state for velocity impulse calculation
+  private prevYaw = 0;
+  private prevPitch = 0;
+  private prevRoll = 0;
+  private prevFaceX = 0.5;
+  private prevFaceY = 0.5;
 
   constructor() {
     this.initSparkles();
@@ -88,16 +96,46 @@ export class HairEngine {
     if (!settings.physics) {
       this.spring.x = 0;
       this.spring.y = 0;
+      this.spring.vx = 0;
+      this.spring.vy = 0;
       this.spring.rot = 0;
+      this.spring.vRot = 0;
+      this.spring.wobble = 0;
       return;
     }
 
-    const targetX = -tracking.yaw * 24;
-    const targetY = -tracking.pitch * 20 + (settings.audioReactive ? -tracking.audioLevel * 35 : 0);
-    const targetRot = -tracking.roll * 0.4 - tracking.yaw * 0.15;
+    // Calculate instantaneous motion delta/velocity from head movements
+    const deltaYaw = tracking.yaw - this.prevYaw;
+    const deltaPitch = tracking.pitch - this.prevPitch;
+    const deltaRoll = tracking.roll - this.prevRoll;
+    const deltaX = tracking.faceX - this.prevFaceX;
+    const deltaY = tracking.faceY - this.prevFaceY;
 
-    const stiffness = settings.springStiffness || 0.18;
-    const damping = 0.82;
+    this.prevYaw = tracking.yaw;
+    this.prevPitch = tracking.pitch;
+    this.prevRoll = tracking.roll;
+    this.prevFaceX = tracking.faceX;
+    this.prevFaceY = tracking.faceY;
+
+    // Apply high-energy inertia impulse on head movements
+    this.spring.vx -= deltaYaw * 95 + deltaX * 180;
+    this.spring.vy -= deltaPitch * 90 + deltaY * 160;
+    this.spring.vRot -= deltaRoll * 1.8 + deltaYaw * 0.45;
+
+    // Audio-reactive voice bounce pulse
+    if (settings.audioReactive && tracking.audioLevel > 0.08) {
+      this.spring.vy -= tracking.audioLevel * 32;
+      this.spring.wobble += tracking.audioLevel * 0.35;
+    }
+
+    // Target displacement based on head pose
+    const targetX = -tracking.yaw * 48;
+    const targetY = -tracking.pitch * 38;
+    const targetRot = -tracking.roll * 0.65 - tracking.yaw * 0.22;
+
+    // Elastic spring physics with bouncy recoil
+    const stiffness = settings.springStiffness || 0.22;
+    const damping = 0.88; // Lower damping allows satisfying spring oscillations
 
     const ax = (targetX - this.spring.x) * stiffness;
     const ay = (targetY - this.spring.y) * stiffness;
@@ -110,6 +148,9 @@ export class HairEngine {
     this.spring.x += this.spring.vx;
     this.spring.y += this.spring.vy;
     this.spring.rot += this.spring.vRot;
+
+    // Secondary harmonic flex / jiggle
+    this.spring.wobble *= 0.85;
 
     this.sparkles.forEach((s) => {
       s.phase += s.speed;
@@ -127,15 +168,20 @@ export class HairEngine {
   ) {
     ctx.save();
 
-    // Position origin directly at forehead hairline anchor
+    // Position origin directly at forehead hairline anchor with amplified bouncy physics
     const hairAnchorY = headY + settings.hairlineLift;
-    ctx.translate(headX + this.spring.x * 0.4, hairAnchorY + this.spring.y * 0.4);
+    const springX = this.spring.x * 0.85;
+    const springY = this.spring.y * 0.85;
+    
+    ctx.translate(headX + springX, hairAnchorY + springY);
 
-    const totalRotation = tracking.roll * 0.85 + this.spring.rot + tracking.yaw * 0.12;
+    const totalRotation = tracking.roll * 0.85 + this.spring.rot * 0.95 + tracking.yaw * 0.12;
     ctx.rotate(totalRotation);
 
-    const hairW = headRadius * 2.2 * settings.bigness;
-    const hairH = headRadius * 2.1 * settings.height * (1 + (settings.audioReactive ? tracking.audioLevel * 0.35 : 0));
+    // Dynamic height and width with bounce scaling
+    const bounceFactor = 1 + (settings.audioReactive ? tracking.audioLevel * 0.45 : 0) + Math.abs(this.spring.vy) * 0.008;
+    const hairW = headRadius * 2.2 * settings.bigness * (1 + Math.abs(this.spring.vx) * 0.005);
+    const hairH = headRadius * 2.1 * settings.height * bounceFactor;
 
     // 1. Demogod Golden Aura
     if (settings.superDemogodMode) {
@@ -151,8 +197,7 @@ export class HairEngine {
 
       const drawW = hairW;
       const drawH = hairH;
-      const drawX = -drawW * 0.5 + tracking.yaw * 12;
-      // Anchor bottom hairline at origin (0, 0)
+      const drawX = -drawW * 0.5 + tracking.yaw * 12 + this.spring.x * 0.15;
       const drawY = -drawH * 0.58;
 
       ctx.drawImage(this.hairCanvas, drawX, drawY, drawW, drawH);
@@ -190,7 +235,7 @@ export class HairEngine {
     const hw = w * 0.44;
     const topY = -h * 0.58 - extraH;
     const baseY = -h * 0.45;
-    const yawX = tracking.yaw * 20;
+    const yawX = tracking.yaw * 20 + this.spring.x * 0.3;
 
     ctx.save();
     ctx.beginPath();
@@ -229,7 +274,7 @@ export class HairEngine {
   ) {
     const hw = w * 0.5;
     const hh = h;
-    const yawShift = tracking.yaw * (w * 0.2);
+    const yawShift = tracking.yaw * (w * 0.2) + this.spring.x * 0.2;
 
     ctx.save();
     ctx.beginPath();
@@ -261,8 +306,8 @@ export class HairEngine {
     const hw = w * 0.5;
     const hh = h;
     const shineIntensity = settings.shininess / 100;
-    const highlightY = -hh * 0.35 + tracking.pitch * 20 + Math.sin(this.time * 2) * 3;
-    const highlightX = tracking.yaw * 30;
+    const highlightY = -hh * 0.35 + tracking.pitch * 20 + Math.sin(this.time * 2) * 3 + this.spring.y * 0.1;
+    const highlightX = tracking.yaw * 30 + this.spring.x * 0.15;
 
     ctx.save();
 

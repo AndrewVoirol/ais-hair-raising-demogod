@@ -21,11 +21,11 @@ export const Teleprompter: React.FC<TeleprompterProps> = ({
 }) => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  const sampleKeynoteScript = `Welcome to Google I/O! Today, we are thrilled to unveil our next-generation multimodal AI models.
+  const sampleKeynoteScript = `Welcome to the I/Ø Keynote! Today, we are thrilled to unveil our next-generation multimodal AI models.
 
 Notice the unprecedented reasoning capabilities, real-time audio-visual comprehension, and instantaneous response latency.
 
-As you can see right here on my DeepMind workstation, complex multimodal agentic workflows now execute directly in your browser with zero server latency.
+As you can see right here on my DeepBrain workstation, complex multimodal agentic workflows now execute directly in your browser with zero server latency.
 
 And of course, when the demo works flawlessly on the first try... my hair literally rises to the occasion!
 

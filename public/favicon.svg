@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs>
+    <linearGradient id="hairGlow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="50%" stop-color="#818cf8" />
+      <stop offset="100%" stop-color="#f43f5e" />
+    </linearGradient>
+    <linearGradient id="pompadourGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#262626" />
+      <stop offset="40%" stop-color="#171717" />
+      <stop offset="100%" stop-color="#0a0a0a" />
+    </linearGradient>
+    <radialGradient id="sheen" cx="50%" cy="20%" r="40%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <!-- Background Circle -->
+  <circle cx="32" cy="32" r="30" fill="#0f172a" stroke="url(#hairGlow)" stroke-width="2.5" />
+  
+  <!-- Voluminous Pompadour Hair Base -->
+  <path d="M14 36 C12 20, 20 8, 32 6 C44 8, 52 20, 50 36 C46 26, 42 22, 32 20 C22 22, 18 26, 14 36 Z" fill="url(#pompadourGrad)" />
+  <!-- Hair Specular Highlights -->
+  <path d="M22 18 C26 12, 36 10, 42 14 C36 12, 28 14, 22 18 Z" fill="url(#sheen)" opacity="0.9" />
+  <path d="M18 24 C24 16, 32 15, 40 19 C32 16, 24 18, 18 24 Z" fill="#60a5fa" opacity="0.6" />
+
+  <!-- Face Contour -->
+  <path d="M22 30 C22 42, 26 48, 32 48 C38 48, 42 42, 42 30 C36 31, 28 31, 22 30 Z" fill="#d97706" opacity="0.85" />
+
+  <!-- Designer Round Glasses -->
+  <circle cx="27" cy="34" r="5" stroke="#000" stroke-width="2" fill="rgba(255,255,255,0.15)"/>
+  <circle cx="37" cy="34" r="5" stroke="#000" stroke-width="2" fill="rgba(255,255,255,0.15)"/>
+  <path d="M32 34 L32 34" stroke="#000" stroke-width="2"/>
+  <path d="M22 34 L18 32 M42 34 L46 32" stroke="#000" stroke-width="1.5"/>
+
+  <!-- Smile -->
+  <path d="M29 42 Q32 45 35 42" stroke="#451a03" stroke-width="1.5" stroke-linecap="round"/>
+
+  <!-- Sparkle Accent -->
+  <path d="M48 10 L50 14 L54 16 L50 18 L48 22 L46 18 L42 16 L46 14 Z" fill="#fbbf24" />
+</svg>

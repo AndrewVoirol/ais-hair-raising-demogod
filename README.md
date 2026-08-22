@@ -10,8 +10,8 @@ Turn any webcam presentation into a high-octane keynote demo featuring voluminou
 
 ```bash
 # Clone the repository
-git clone https://github.com/andrewvoirol/hair-raising-demogod.git
-cd hair-raising-demogod
+git clone https://github.com/AndrewVoirol/ais-hair-raising-demogod.git
+cd ais-hair-raising-demogod
 
 # Install dependencies and launch studio
 npm install

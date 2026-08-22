@@ -3,7 +3,6 @@ import type { FaceTrackingData } from '../types/studio';
 declare global {
   interface Window {
     FaceMesh?: any;
-    Camera?: any;
   }
 }
 
